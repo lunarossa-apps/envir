@@ -5,6 +5,4 @@ No liability for data loss or damage to the reMarkable.
 Back up your data form the reMarkable before changing it. 
 Tested with reMarkable 2 and all firmware versions.
 
-Always use the latest version. You can download these at any time from www.freeremarkabletools.com.
-
 
