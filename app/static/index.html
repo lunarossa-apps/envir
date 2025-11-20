@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Segnalazioni ambientali</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: #f7fafc;
+      color: #1a202c;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: white;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    main {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; }
+    }
+    h1 { margin: 0; font-size: 1.6rem; }
+    p.lead { margin: .25rem 0 0; opacity: .9; }
+    section.card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .field { display: flex; flex-direction: column; gap: .35rem; }
+    label { font-weight: 600; font-size: .95rem; }
+    input, textarea {
+      padding: .7rem .8rem;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 1rem;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    button {
+      background: #2563eb;
+      border: none;
+      color: white;
+      padding: .8rem 1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.14);
+    }
+    button.secondary { background: #0ea5e9; }
+    #map { width: 100%; height: 100%; min-height: 480px; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .status { font-size: .9rem; color: #065f46; background: #ecfdf3; border: 1px solid #bbf7d0; padding: .6rem .75rem; border-radius: 10px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Segnalazioni ambientali</h1>
+    <p class="lead">Login con Google, scegli un nickname e condividi segnalazioni di inquinamento, spiagge sporche o scarichi a mare.</p>
+  </header>
+  <main>
+    <section class="card">
+      <div class="status" id="status">Accedi con il tuo account Google, scegli un nickname e carica eventuale avatar 100x100.</div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email Google</label>
+          <input id="email" name="email" type="email" required placeholder="nome@azienda.com" />
+        </div>
+        <div class="field">
+          <label for="nickname">Nickname pubblico</label>
+          <input id="nickname" name="nickname" required placeholder="EcoGuerriero" />
+        </div>
+        <div class="field">
+          <label for="avatar">Avatar (verrà ridimensionato a 100x100)</label>
+          <input id="avatar" name="avatar" type="file" accept="image/*" />
+        </div>
+        <button type="submit">Accedi con Google</button>
+      </form>
+      <hr />
+      <form id="reportForm" class="hidden">
+        <div class="field">
+          <label for="photo">Foto della segnalazione</label>
+          <input id="photo" name="photo" type="file" accept="image/*" />
+        </div>
+        <div class="field">
+          <label for="map_url">Link Google Maps o geolocalizzazione</label>
+          <input id="map_url" name="map_url" type="url" placeholder="https://maps.google.com/..." />
+        </div>
+        <div class="field">
+          <label for="latitude">Latitudine</label>
+          <input id="latitude" name="latitude" type="number" step="0.000001" required />
+        </div>
+        <div class="field">
+          <label for="longitude">Longitudine</label>
+          <input id="longitude" name="longitude" type="number" step="0.000001" required />
+        </div>
+        <div class="field">
+          <label for="comment">Commento (max 2 righe)</label>
+          <textarea id="comment" name="comment" maxlength="280" placeholder="Due righe per descrivere la situazione"></textarea>
+        </div>
+        <button type="submit" class="secondary">Pubblica segnalazione</button>
+      </form>
+    </section>
+    <section>
+      <div id="map"></div>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const statusBox = document.getElementById('status');
+    const loginForm = document.getElementById('loginForm');
+    const reportForm = document.getElementById('reportForm');
+    let currentUser = null;
+
+    const map = L.map('map').setView([41.8719, 12.5674], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributori'
+    }).addTo(map);
+    const markers = L.layerGroup().addTo(map);
+
+    function setStatus(text, isError=false) {
+      statusBox.textContent = text;
+      statusBox.style.background = isError ? '#fef2f2' : '#ecfdf3';
+      statusBox.style.borderColor = isError ? '#fecdd3' : '#bbf7d0';
+      statusBox.style.color = isError ? '#b91c1c' : '#065f46';
+    }
+
+    function updateReportFormVisibility() {
+      if (currentUser) {
+        reportForm.classList.remove('hidden');
+        setStatus(`Hai eseguito l'accesso come ${currentUser.nickname}. Puoi pubblicare nuove segnalazioni.`);
+      } else {
+        reportForm.classList.add('hidden');
+        setStatus('Accedi con il tuo account Google, scegli un nickname e carica eventuale avatar 100x100.');
+      }
+    }
+
+    async function loadReports() {
+      const response = await fetch('/reports');
+      const reports = await response.json();
+      markers.clearLayers();
+      reports.forEach(report => {
+        const marker = L.circleMarker([report.latitude, report.longitude], {
+          radius: 8,
+          color: '#dc2626',
+          fillColor: '#ef4444',
+          fillOpacity: 0.8
+        });
+        const comment = report.comment ? `<p>${report.comment.replace(/\n/g,'<br>')}</p>` : '';
+        const photo = report.photo_path ? `<div><img src="${report.photo_path}" alt="foto" style="max-width:220px;border-radius:8px;margin-top:6px;"/></div>` : '';
+        const link = report.map_url ? `<a href="${report.map_url}" target="_blank" rel="noopener">Apri su Google Maps</a>` : '';
+        marker.bindPopup(`<strong>${report.nickname}</strong><br/>${comment}${link}${photo}`);
+        marker.addTo(markers);
+      });
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(loginForm);
+      try {
+        const response = await fetch('/auth/google', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error('Accesso non riuscito');
+        currentUser = await response.json();
+        updateReportFormVisibility();
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    });
+
+    reportForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!currentUser) { setStatus('Devi prima effettuare il login.', true); return; }
+      const formData = new FormData(reportForm);
+      formData.append('user_id', currentUser.id);
+      try {
+        const response = await fetch('/reports', { method: 'POST', body: formData });
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Errore di salvataggio');
+        }
+        await loadReports();
+        reportForm.reset();
+        setStatus('Segnalazione pubblicata con successo!');
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    });
+
+    updateReportFormVisibility();
+    loadReports();
+  </script>
+</body>
+</html>
