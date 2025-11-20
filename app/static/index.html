@@ -176,7 +176,10 @@
       const formData = new FormData(loginForm);
       try {
         const response = await fetch('/auth/google', { method: 'POST', body: formData });
-        if (!response.ok) throw new Error('Accesso non riuscito');
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.detail || 'Accesso non riuscito: controlla email e nickname');
+        }
         currentUser = await response.json();
         updateReportFormVisibility();
       } catch (err) {

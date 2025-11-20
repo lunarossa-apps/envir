@@ -45,11 +45,18 @@ async def google_login(
     avatar: Optional[UploadFile] = File(None, description="Foto profilo opzionale"),
 ) -> UserOut:
     nickname_clean = nickname.strip()
+    email_clean = email.strip().lower()
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(status_code=400, detail="Email Google non valida")
     if not nickname_clean:
         raise HTTPException(status_code=400, detail="Il nickname non può essere vuoto")
 
-    existing = database.get_user_by_email(email)
-    user_row = existing if existing else database.create_user(email, nickname_clean, None)
+    existing = database.get_user_by_email(email_clean)
+    if existing:
+        database.update_user_profile(existing["id"], nickname_clean)
+        user_row = database.get_user(existing["id"])
+    else:
+        user_row = database.create_user(email_clean, nickname_clean, None)
 
     if avatar:
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:

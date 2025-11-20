@@ -3,7 +3,7 @@
 Mini social network per segnalare casi di inquinamento ambientale, spiagge sporche, scarichi a mare o rifiuti abbandonati. Offre una mappa pubblica con puntini rossi per ogni segnalazione e, dopo accesso Google simulato, la possibilità di creare nuovi post con foto e coordinate.
 
 ## Funzionalità
-- Accesso con email Google + nickname (avatar opzionale ridimensionato a 100x100).
+- Accesso con email Google + nickname (avatar opzionale ridimensionato a 100x100). L'email viene normalizzata in minuscolo e il nickname viene aggiornato ad ogni nuovo login.
 - Pubblicazione di segnalazioni con foto, link a Google Maps o coordinate, e commento massimo due righe.
 - Mappa pubblica con marker rossi e popup contenenti commento, link e foto se presente.
 

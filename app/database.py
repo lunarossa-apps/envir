@@ -62,6 +62,14 @@ def create_user(email: str, nickname: str, avatar_path: Optional[str]) -> sqlite
     return row
 
 
+def update_user_profile(user_id: int, nickname: str) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE users SET nickname = ? WHERE id = ?",
+            (nickname, user_id),
+        )
+
+
 def update_user_avatar(user_id: int, avatar_path: str) -> None:
     with get_connection() as conn:
         conn.execute(
