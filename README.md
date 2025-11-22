@@ -37,3 +37,13 @@ Mini social network per segnalare casi di inquinamento ambientale, spiagge sporc
 - `app/utils.py`: ridimensionamento immagini e normalizzazione commenti.
 - `app/static/index.html`: interfaccia con mappa Leaflet e form di login/pubblicazione.
 - `app/media/`: cartella dove vengono salvati avatar e foto delle segnalazioni.
+
+## Risoluzione problemi GitHub (errore 50x nell'app mobile)
+Se durante l'aggiornamento del branch vedi il messaggio «Errore durante il caricamento di una richiesta pull» o «Il server sta
+riscontrando problemi (50x)», è un problema lato GitHub e non dipende dal codice di questo progetto. Puoi provare così:
+
+1. Controlla [status.github.com](https://www.githubstatus.com/) per verificare eventuali incidenti in corso.
+2. Chiudi e riapri l'app GitHub oppure usa il sito web desktop/mobile per forzare un refresh della PR.
+3. Assicurati che il branch sia stato pushato correttamente (ad esempio con `git push origin <nome-branch>`).
+4. Se l'errore persiste anche via web, attendi la risoluzione dell'incidente o apri un ticket al supporto GitHub allegando lo
+   `request id` mostrato nel messaggio di errore.
