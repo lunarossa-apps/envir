@@ -125,6 +125,10 @@
     const reportForm = document.getElementById('reportForm');
     let currentUser = null;
 
+    // Allow overriding the API root (e.g. when opening the static HTML from GitHub Pages)
+    // by setting window.API_BASE before this script loads. Default: same origin.
+    const API_BASE = window.API_BASE || '';
+
     const map = L.map('map').setView([41.8719, 12.5674], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributori'
@@ -149,7 +153,7 @@
     }
 
     async function loadReports() {
-      const response = await fetch('/reports');
+      const response = await fetch(`${API_BASE}/reports`);
       const reports = await response.json();
       markers.clearLayers();
       reports.forEach(report => {
@@ -178,16 +182,19 @@
       }
 
       try {
-        const response = await fetch('/auth/local', { method: 'POST', body: formData });
+        const response = await fetch(`${API_BASE}/auth/local`, { method: 'POST', body: formData });
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          const detail = error.detail || 'Accesso non riuscito: controlla il nickname.';
+          const isBackendMissing = response.status === 404 || response.status === 502 || response.status === 503;
+          const detail = isBackendMissing
+            ? 'Backend non raggiungibile: avvia il server con ./scripts/devserver.sh e apri http://localhost:8000.'
+            : (error.detail || 'Accesso non riuscito: controlla il nickname.');
           throw new Error(detail);
         }
         currentUser = await response.json();
         updateReportFormVisibility();
       } catch (err) {
-        setStatus(err.message, true);
+        setStatus(err.message || 'Errore di rete: avvia il backend e riprova.', true);
       }
     });
 
@@ -197,7 +204,7 @@
       const formData = new FormData(reportForm);
       formData.append('user_id', currentUser.id);
       try {
-        const response = await fetch('/reports', { method: 'POST', body: formData });
+        const response = await fetch(`${API_BASE}/reports`, { method: 'POST', body: formData });
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.detail || 'Errore di salvataggio');

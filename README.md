@@ -30,6 +30,8 @@ Mini social network per segnalare casi di inquinamento ambientale, spiagge sporc
    ```
 
 3. Aprire il browser su [http://localhost:8000](http://localhost:8000) per usare l'interfaccia e inserire un nickname con eventuale avatar.
+   - Se stai aprendo l'`index.html` hostato altrove (es. GitHub Pages) devi comunque avere il backend in esecuzione e raggiungibile; in quel caso puoi impostare `window.API_BASE = 'https://<host-backend>'` **prima** di caricare lo script della pagina.
+   - Se ricevi il messaggio «Backend non raggiungibile», verifica che il server sia attivo (controlla il log di `uvicorn`) e che il browser punti all'host corretto.
 
 ## Struttura
 - `app/main.py`: applicazione FastAPI e API principali.
