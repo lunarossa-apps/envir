@@ -1,41 +1,37 @@
-# Segnalazioni ambientali
+# Gruppo Vacanze
 
-Mini social network per segnalare casi di inquinamento ambientale, spiagge sporche, scarichi a mare o rifiuti abbandonati. Offre una mappa pubblica con puntini rossi per ogni segnalazione e, dopo accesso Google simulato, la possibilità di creare nuovi post con foto e coordinate.
+Webapp mobile first per gruppi che viaggiano insieme. L'app aiuta a decidere velocemente cosa fare grazie a votazioni rapide, raccolta del mood del gruppo, suggerimenti locali “AI powered” basati su regole e gestione semplice del viaggio.
 
-## Funzionalità
-- Accesso con email Google + nickname (avatar opzionale ridimensionato a 100x100). L'email viene normalizzata in minuscolo e il nickname viene aggiornato ad ogni nuovo login.
-- Pubblicazione di segnalazioni con foto, link a Google Maps o coordinate, e commento massimo due righe.
-- Mappa pubblica con marker rossi e popup contenenti commento, link e foto se presente.
+## Cosa include
+- Creazione gruppo con codice breve condivisibile e salvataggio completo in `localStorage`.
+- Accesso membri con associazione del dispositivo al partecipante attivo.
+- Dashboard Home in stile app con hero, quick actions, activity feed e overview del gruppo.
+- Schermate dedicate per `Voting`, `Mood`, `AI Suggestion` e `Gruppo`.
+- Light theme, dark theme, persistenza tema, supporto tema di sistema e shell PWA offline friendly.
+- Export del riepilogo viaggio in JSON e azioni di reset / scioglimento gruppo.
+
+## Stack
+- FastAPI per servire l'app statica.
+- Frontend React + hooks con shell TypeScript di riferimento in `frontend/src` e runtime statico già pronto in `app/static`.
+- Nessun backend applicativo per i dati del viaggio: tutto resta in `localStorage`.
 
 ## Avvio locale
-1. Installare le dipendenze e avviare il server con lo script helper (crea una virtualenv `.venv`):
-   ```bash
-   ./scripts/devserver.sh
-   ```
-
-   In ambienti con proxy restrittivi potrebbe essere necessario configurare `HTTP(S)_PROXY` o scaricare manualmente i wheel
-   indicati in `requirements.txt`.
-
-   Se non hai accesso a Internet e vuoi almeno registrare l'installazione in modalità editable senza scaricare nulla, usa:
-   ```bash
-   ./scripts/offline_editable.sh
-   ```
-   (installa solo il package locale; le dipendenze reali vanno installate a parte quando hai connettività, ad esempio con
-   `pip install -r requirements.txt`).
-
-2. In alternativa, installare manualmente e lanciare uvicorn:
+1. Installare le dipendenze Python e avviare il server:
    ```bash
    pip install -r requirements.txt
    uvicorn app.main:app --reload
    ```
+2. Aprire [http://localhost:8000](http://localhost:8000).
 
-3. Aprire il browser su [http://localhost:8000](http://localhost:8000) per usare l'interfaccia.
+> Nota: il runtime statico è già incluso in `app/static`, quindi non è necessario alcun build step frontend per provarla.
 
-> Nota: l'accesso Google è simulato lato backend con la sola email; integrare la verifica OAuth per un ambiente produttivo.
+## Struttura essenziale
+- `frontend/src/main.tsx`: shell React, schermate, stato globale e UX.
+- `frontend/src/types.ts`: modelli TypeScript dell'app.
+- `frontend/src/suggestions.ts`: motore locale per i suggerimenti.
+- `frontend/src/styles.css`: design system mobile first, light/dark theme e layout responsive.
+- `app/static/`: runtime statico servito da FastAPI.
+- `app/main.py`: entrypoint FastAPI.
 
-## Struttura
-- `app/main.py`: applicazione FastAPI e API principali.
-- `app/database.py`: persistenza SQLite di utenti e segnalazioni.
-- `app/utils.py`: ridimensionamento immagini e normalizzazione commenti.
-- `app/static/index.html`: interfaccia con mappa Leaflet e form di login/pubblicazione.
-- `app/media/`: cartella dove vengono salvati avatar e foto delle segnalazioni.
+## Nota progettuale
+La persistenza del viaggio è locale al dispositivo, come richiesto. Per condividere lo stato su altri dispositivi è disponibile l'export JSON da schermata `Gruppo`, utile come snapshot manuale del viaggio.
