@@ -15,9 +15,10 @@ APP_DIR = Path(__file__).resolve().parent
 MEDIA_DIR = APP_DIR / "media"
 STATIC_DIR = APP_DIR / "static"
 
-app = FastAPI(title="Segnalazioni Ambientali")
+app = FastAPI(title="Gruppo Vacanze")
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
 
 
 @app.on_event("startup")
@@ -28,6 +29,16 @@ def startup() -> None:
 @app.get("/", response_class=FileResponse)
 def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/manifest.webmanifest", response_class=FileResponse)
+def manifest() -> FileResponse:
+    return FileResponse(STATIC_DIR / "manifest.webmanifest")
+
+
+@app.get("/sw.js", response_class=FileResponse)
+def service_worker() -> FileResponse:
+    return FileResponse(STATIC_DIR / "sw.js")
 
 
 def _serialize_user(row) -> UserOut:

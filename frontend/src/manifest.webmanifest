@@ -1,0 +1,11 @@
+{
+  "name": "Gruppo Vacanze",
+  "short_name": "Vacanze",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#6d5efc",
+  "lang": "it-IT",
+  "description": "Webapp locale per organizzare viaggi di gruppo, votazioni rapide e mood sharing.",
+  "icons": []
+}
